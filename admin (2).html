@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sri Sabari — Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ocean:#003d4d;--deep:#001f2b;--teal:#007a8c;--aqua:#00b4cc;
+  --aqua-lt:#7fd8e4;--aqua-pale:#d4f3f7;
+  --gold:#c8860a;--gold-lt:#f0c040;--gold-pale:#fff8e6;
+  --cream:#f7f4ee;--warm:#fdfcf8;--ink:#0d1a1e;
+  --mid:#3a5560;--muted:#7a9aa5;--border:#e4e0d8;
+  --green:#16a34a;--green-lt:#dcfce7;
+  --red:#dc2626;--red-lt:#fee2e2;
+  --amber:#d97706;--amber-lt:#fef3c7;
+  --purple:#7c3aed;--purple-lt:#ede9fe;
+  --sidebar:260px;
+  --topbar:64px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Outfit',sans-serif;font-size:15px;line-height:1.5;color:var(--ink);background:var(--cream)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--teal);border-radius:3px}
+
+/* ═══ LOGIN SCREEN ═══ */
+#login-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(155deg,#e6f4f7 0%,#f0ede4 50%,#fef9ee 100%);
+  display:flex;align-items:center;justify-content:center;
+}
+.login-card{
+  background:#fff;border-radius:24px;padding:3rem 2.5rem;
+  box-shadow:0 20px 60px rgba(0,61,77,.15);
+  width:100%;max-width:400px;text-align:center;
+}
+.login-logo{
+  width:60px;height:60px;border-radius:16px;
+  background:linear-gradient(135deg,var(--ocean),var(--teal));
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1.4rem;
+}
+.login-logo svg{width:34px;height:34px}
+.login-card h2{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:700;color:var(--ocean);margin-bottom:.3rem}
+.login-card p{font-size:.84rem;color:var(--muted);margin-bottom:2rem}
+.login-fg{display:flex;flex-direction:column;gap:5px;margin-bottom:1rem;text-align:left}
+.login-fg label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ocean)}
+.login-fg input{padding:.72rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.9rem;color:var(--ink);background:var(--cream);outline:none;transition:all .2s;width:100%}
+.login-fg input:focus{border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px rgba(0,122,140,.1)}
+.login-btn{width:100%;padding:.88rem;background:linear-gradient(90deg,var(--teal),var(--aqua));color:#fff;border:none;border-radius:12px;font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;cursor:pointer;transition:all .25s;margin-top:.5rem}
+.login-btn:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,122,140,.3)}
+.login-err{display:none;background:var(--red-lt);color:var(--red);font-size:.8rem;padding:.6rem .9rem;border-radius:8px;margin-top:.8rem;text-align:left}
+.login-err.show{display:block}
+
+/* ═══ LAYOUT ═══ */
+#app{display:none;height:100%;min-height:100vh}
+#app.active{display:flex}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;
+  background:var(--deep);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;bottom:0;left:0;z-index:100;
+  overflow-y:auto;
+}
+.sb-logo{
+  padding:1.3rem 1.4rem;border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex;align-items:center;gap:10px;
+}
+.sb-logo-mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--aqua));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-logo-mark svg{width:22px;height:22px}
+.sb-logo-text b{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:700;color:#fff;display:block;line-height:1.2}
+.sb-logo-text small{font-size:.6rem;color:rgba(255,255,255,.4);letter-spacing:.06em;text-transform:uppercase}
+
+.sb-section{padding:.9rem 1rem .4rem;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.sb-nav{list-style:none;padding:0 .7rem;display:flex;flex-direction:column;gap:2px}
+.sb-nav li a,.sb-nav li button{
+  display:flex;align-items:center;gap:10px;
+  padding:.62rem .9rem;border-radius:10px;
+  font-size:.84rem;font-weight:500;color:rgba(255,255,255,.55);
+  text-decoration:none;cursor:pointer;border:none;background:none;
+  width:100%;transition:all .2s;text-align:left;
+}
+.sb-nav li a:hover,.sb-nav li button:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.sb-nav li a.active,.sb-nav li button.active{background:rgba(0,180,204,.18);color:#fff}
+.sb-nav li a.active .nav-ico{color:var(--aqua)}
+.nav-ico{font-size:1rem;width:20px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--gold);color:#fff;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:10px;min-width:20px;text-align:center}
+.sb-badge.red{background:var(--red)}
+
+.sb-footer{margin-top:auto;padding:1rem;border-top:1px solid rgba(255,255,255,.07)}
+.sb-footer button{width:100%;padding:.6rem;background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.25);color:#f87171;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
+.sb-footer button:hover{background:rgba(220,38,38,.25)}
+
+/* ═══ MAIN CONTENT ═══ */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* topbar */
+.topbar{
+  height:var(--topbar);background:#fff;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;position:sticky;top:0;z-index:50;
+}
+.topbar-left h1{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--ocean)}
+.topbar-left p{font-size:.75rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:1rem}
+.tb-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--aqua));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-weight:700;color:#fff;font-size:.9rem}
+.tb-info b{font-size:.82rem;font-weight:600;color:var(--ink);display:block}
+.tb-info small{font-size:.7rem;color:var(--muted)}
+.tb-notif{position:relative;width:38px;height:38px;border-radius:10px;background:var(--cream);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;transition:all .2s}
+.tb-notif:hover{background:var(--aqua-pale);border-color:var(--aqua-lt)}
+.tb-notif-dot{position:absolute;top:6px;right:7px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid #fff}
+
+/* page content */
+.page-content{padding:2rem;flex:1}
+.page{display:none}
+.page.active{display:block}
+
+/* ═══ STAT CARDS ═══ */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-bottom:2rem}
+.stat-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.4rem;transition:all .25s}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,61,77,.1)}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.9rem}
+.sc-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.sc-badge{font-size:.7rem;font-weight:600;padding:3px 9px;border-radius:20px}
+.sc-badge.up{background:var(--green-lt);color:var(--green)}
+.sc-badge.dn{background:var(--red-lt);color:var(--red)}
+.sc-num{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:var(--ocean);line-height:1}
+.sc-lbl{font-size:.75rem;color:var(--muted);margin-top:4px}
+
+/* ═══ SECTION TITLES ═══ */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+.sec-head h2{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:var(--ocean)}
+.sec-head p{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+/* ═══ ORDERS TABLE ═══ */
+.table-wrap{background:#fff;border:1.5px solid var(--border);border-radius:16px;overflow:hidden}
+.table-toolbar{display:flex;align-items:center;gap:1rem;padding:1rem 1.2rem;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:.45rem .9rem;flex:1;min-width:200px}
+.search-box input{border:none;background:none;outline:none;font-family:'Outfit',sans-serif;font-size:.84rem;color:var(--ink);width:100%}
+.filter-btn{display:flex;align-items:center;gap:6px;padding:.45rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-size:.8rem;font-weight:500;color:var(--mid);background:#fff;cursor:pointer;transition:all .2s;white-space:nowrap}
+.filter-btn:hover{border-color:var(--teal);color:var(--teal)}
+.filter-btn.active{background:var(--aqua-pale);border-color:var(--teal);color:var(--teal)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--cream)}
+th{padding:.75rem 1.1rem;font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;white-space:nowrap}
+td{padding:.85rem 1.1rem;font-size:.83rem;color:var(--mid);border-top:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:rgba(0,180,204,.03)}
+.td-name{font-weight:600;color:var(--ink)}
+.td-phone{font-size:.78rem;color:var(--muted)}
+.status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700;white-space:nowrap}
+.status::before{content:'';width:5px;height:5px;border-radius:50%}
+.status.pending{background:var(--amber-lt);color:var(--amber)}
+.status.pending::before{background:var(--amber)}
+.status.confirmed{background:var(--aqua-pale);color:var(--teal)}
+.status.confirmed::before{background:var(--teal)}
+.status.completed{background:var(--green-lt);color:var(--green)}
+.status.completed::before{background:var(--green)}
+.status.cancelled{background:var(--red-lt);color:var(--red)}
+.status.cancelled::before{background:var(--red)}
+.act-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+.act-btn{padding:4px 10px;border-radius:7px;font-size:.7rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;white-space:nowrap}
+.act-btn.accept{background:var(--green-lt);color:var(--green)}
+.act-btn.accept:hover{background:var(--green);color:#fff}
+.act-btn.cancel{background:var(--red-lt);color:var(--red)}
+.act-btn.cancel:hover{background:var(--red);color:#fff}
+.act-btn.complete{background:var(--aqua-pale);color:var(--teal)}
+.act-btn.complete:hover{background:var(--teal);color:#fff}
+.act-btn.wa{background:#dcfce7;color:#16a34a}
+.act-btn.wa:hover{background:#16a34a;color:#fff}
+
+/* ═══ PRICE EDITOR ═══ */
+.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+.price-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.5rem;transition:all .25s}
+.price-card:hover{border-color:var(--aqua-lt);box-shadow:0 4px 20px rgba(0,122,140,.08)}
+.price-card-top{display:flex;align-items:center;gap:12px;margin-bottom:1.2rem}
+.price-ico{width:46px;height:46px;border-radius:12px;background:var(--aqua-pale);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.price-card h3{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:var(--ocean)}
+.price-card small{font-size:.72rem;color:var(--muted)}
+.price-fg{display:flex;flex-direction:column;gap:5px;margin-bottom:.8rem}
+.price-fg label{font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ocean)}
+.price-input-wrap{display:flex;align-items:center;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:all .2s}
+.price-input-wrap:focus-within{border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px rgba(0,122,140,.1)}
+.price-sym{padding:.65rem .9rem;font-weight:700;color:var(--teal);font-family:'Cormorant Garamond',serif;font-size:1.1rem;border-right:1.5px solid var(--border)}
+.price-input-wrap input{flex:1;padding:.65rem .9rem;border:none;background:none;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;color:var(--ink);outline:none;width:100%}
+.save-btn{width:100%;padding:.7rem;background:linear-gradient(90deg,var(--teal),var(--aqua));color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;transition:all .2s;margin-top:.3rem}
+.save-btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+
+/* ═══ SLOT MANAGER ═══ */
+.slot-calendar{display:grid;grid-template-columns:auto 1fr;gap:2rem;align-items:start}
+.slot-dates{display:flex;flex-direction:column;gap:.5rem}
+.date-btn{padding:.55rem 1.1rem;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:500;color:var(--mid);cursor:pointer;transition:all .2s;text-align:left;min-width:130px}
+.date-btn:hover{border-color:var(--aqua-lt)}
+.date-btn.sel{background:var(--teal);border-color:var(--teal);color:#fff}
+.slot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem}
+.slot-tog{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:1rem 1.1rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.slot-tog.avail{border-color:var(--green);background:var(--green-lt)}
+.slot-tog.avail::after{content:'✓';position:absolute;top:6px;right:9px;font-size:.72rem;font-weight:700;color:var(--green)}
+.slot-tog.full{border-color:var(--red);background:var(--red-lt)}
+.slot-tog.full::after{content:'Full';position:absolute;top:6px;right:9px;font-size:.65rem;font-weight:700;color:var(--red)}
+.slot-tog:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,61,77,.1)}
+.slot-time{font-size:.88rem;font-weight:700;color:var(--ocean)}
+.slot-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+.slot-count{font-size:.7rem;font-weight:600;margin-top:6px}
+.slot-tog.avail .slot-count{color:var(--green)}
+.slot-tog.full .slot-count{color:var(--red)}
+
+/* ═══ WHATSAPP PANEL ═══ */
+.wa-composer{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.5rem}
+.wa-composer h3{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:var(--ocean);margin-bottom:1rem}
+.wa-templates{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.wa-tmpl{padding:.4rem .9rem;background:var(--aqua-pale);border:1px solid var(--aqua-lt);border-radius:20px;font-size:.75rem;font-weight:500;color:var(--teal);cursor:pointer;transition:all .2s}
+.wa-tmpl:hover,.wa-tmpl.sel{background:var(--teal);color:#fff;border-color:var(--teal)}
+.wa-textarea{width:100%;padding:.8rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.85rem;color:var(--ink);background:var(--cream);outline:none;resize:none;height:110px;transition:all .2s;margin-bottom:1rem}
+.wa-textarea:focus{border-color:var(--teal);background:#fff}
+.wa-actions{display:flex;gap:.8rem;flex-wrap:wrap}
+.wa-send{padding:.7rem 1.5rem;background:#22c55e;color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px}
+.wa-send:hover{background:#16a34a;transform:translateY(-1px)}
+.wa-bulk{padding:.7rem 1.5rem;background:var(--aqua-pale);color:var(--teal);border:1.5px solid var(--aqua-lt);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s}
+.wa-bulk:hover{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+/* ═══ ANALYTICS ═══ */
+.chart-row{display:grid;grid-template-columns:1.5fr 1fr;gap:1.2rem;margin-bottom:1.5rem}
+.chart-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.4rem}
+.chart-card h3{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:var(--ocean);margin-bottom:1.2rem}
+.bar-chart{display:flex;flex-direction:column;gap:.7rem}
+.bar-row{display:flex;align-items:center;gap:.9rem}
+.bar-lbl{font-size:.75rem;color:var(--mid);width:90px;flex-shrink:0;font-weight:500}
+.bar-track{flex:1;height:10px;background:var(--cream);border-radius:5px;overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--teal),var(--aqua));transition:width .8s ease}
+.bar-val{font-size:.75rem;font-weight:600;color:var(--teal);width:40px;text-align:right;flex-shrink:0}
+.donut-wrap{display:flex;align-items:center;justify-content:center;gap:2rem;padding:.5rem 0}
+.donut-legend{display:flex;flex-direction:column;gap:.6rem}
+.dl-item{display:flex;align-items:center;gap:8px;font-size:.78rem}
+.dl-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.dl-lbl{color:var(--mid)}
+.dl-pct{margin-left:auto;font-weight:600;color:var(--ink)}
+.mini-donut{width:110px;height:110px}
+
+/* ═══ TOAST ═══ */
+.admin-toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9998;background:var(--ocean);color:#fff;padding:.85rem 1.6rem;border-radius:12px;font-size:.85rem;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,31,43,.25);transform:translateY(80px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap}
+.admin-toast.show{transform:translateY(0);opacity:1}
+
+/* ═══ MODAL ═══ */
+.modal-bg{position:fixed;inset:0;background:rgba(0,31,43,.5);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:20px;padding:2rem;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,31,43,.2)}
+.modal h3{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--ocean);margin-bottom:.4rem}
+.modal p{font-size:.84rem;color:var(--muted);margin-bottom:1.5rem}
+.modal .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:.9rem}
+.modal .fg label{font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ocean)}
+.modal .fg input,.modal .fg select,.modal .fg textarea{padding:.68rem .95rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.88rem;color:var(--ink);background:var(--cream);outline:none;transition:all .2s;width:100%}
+.modal .fg input:focus,.modal .fg select:focus{border-color:var(--teal);background:#fff}
+.modal-actions{display:flex;gap:.8rem;justify-content:flex-end;margin-top:1.2rem}
+.modal-cancel{padding:.65rem 1.3rem;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:500;color:var(--mid);cursor:pointer;transition:all .2s}
+.modal-cancel:hover{border-color:var(--teal);color:var(--teal)}
+.modal-confirm{padding:.65rem 1.5rem;background:var(--teal);color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;transition:all .2s}
+.modal-confirm:hover{background:var(--ocean)}
+
+/* ═══ MISC ═══ */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:700}
+.badge.teal{background:var(--aqua-pale);color:var(--teal)}
+.badge.gold{background:var(--gold-pale);color:var(--gold)}
+.badge.purple{background:var(--purple-lt);color:var(--purple)}
+.empty-state{text-align:center;padding:3rem 2rem;color:var(--muted);font-size:.88rem}
+.empty-state div{font-size:2.5rem;margin-bottom:.8rem}
+.add-btn{display:inline-flex;align-items:center;gap:7px;padding:.58rem 1.2rem;background:var(--teal);color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s}
+.add-btn:hover{background:var(--ocean)}
+
+/* responsive sidebar */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .stat-row{grid-template-columns:1fr 1fr}
+  .price-grid{grid-template-columns:1fr}
+  .chart-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 34 34" fill="none">
+        <path d="M17 4S8 12 8 18a9 9 0 0018 0C26 12 17 4 17 4z" fill="rgba(255,255,255,.35)" stroke="#fff" stroke-width="1.8"/>
+        <path d="M12 20c1 3 6 4 8 2" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="23" cy="11" r="2.5" fill="rgba(255,255,255,.6)"/>
+      </svg>
+    </div>
+    <h2>Admin Login</h2>
+    <p>Sri Sabari Water Tank Cleaning Services</p>
+    <div class="login-fg">
+      <label>Username</label>
+      <input type="text" id="l-user" placeholder="admin" autocomplete="username"/>
+    </div>
+    <div class="login-fg">
+      <label>Password</label>
+      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">🔐 Login to Admin Panel</button>
+    <div class="login-err" id="lerr">❌ Wrong username or password. Try: admin / sabari2008</div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">
+        <svg viewBox="0 0 28 28" fill="none"><path d="M14 3s-9 8-9 14a9 9 0 0018 0C23 11 14 3 14 3z" fill="rgba(255,255,255,.35)" stroke="#fff" stroke-width="1.6"/><path d="M10 18c1 2.5 5 3 7 2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="sb-logo-text"><b>Sri Sabari</b><small>Admin Panel</small></div>
+    </div>
+
+    <div class="sb-section">Main</div>
+    <ul class="sb-nav">
+      <li><a href="#" class="active" onclick="nav('dashboard',this)"><span class="nav-ico">📊</span> Dashboard</a></li>
+      <li><a href="#" onclick="nav('orders',this)"><span class="nav-ico">📋</span> Orders <span class="sb-badge red" id="pending-count">3</span></a></li>
+      <li><a href="#" onclick="nav('slots',this)"><span class="nav-ico">🕐</span> Time Slots</a></li>
+    </ul>
+
+    <div class="sb-section">Management</div>
+    <ul class="sb-nav">
+      <li><a href="#" onclick="nav('prices',this)"><span class="nav-ico">💰</span> Prices</a></li>
+      <li><a href="#" onclick="nav('whatsapp',this)"><span class="nav-ico">💬</span> WhatsApp</a></li>
+      <li><a href="#" onclick="nav('analytics',this)"><span class="nav-ico">📈</span> Analytics</a></li>
+    </ul>
+
+    <div class="sb-section">Settings</div>
+    <ul class="sb-nav">
+      <li><a href="#" onclick="nav('zones',this)"><span class="nav-ico">📍</span> Service Zones</a></li>
+      <li><a href="#" onclick="nav('settings',this)"><span class="nav-ico">⚙️</span> Settings</a></li>
+    </ul>
+
+    <div class="sb-footer">
+      <button onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1 id="page-title">Dashboard</h1>
+        <p id="page-sub">Welcome back! Here's what's happening today.</p>
+      </div>
+      <div class="topbar-right">
+        <div class="tb-notif" title="Notifications">🔔<div class="tb-notif-dot"></div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="tb-avatar">SA</div>
+          <div class="tb-info"><b>Sri Sabari</b><small>Administrator</small></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="page active" id="p-dashboard">
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="sc-top">
+              <div class="sc-ico" style="background:#e0f7fa">📋</div>
+              <span class="sc-badge up">+12%</span>
+            </div>
+            <div class="sc-num" id="total-orders">27</div>
+            <div class="sc-lbl">Total Bookings This Month</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-top">
+              <div class="sc-ico" style="background:#dcfce7">✅</div>
+              <span class="sc-badge up">+5%</span>
+            </div>
+            <div class="sc-num" id="comp-orders">18</div>
+            <div class="sc-lbl">Completed This Month</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-top">
+              <div class="sc-ico" style="background:#fef3c7">⏳</div>
+              <span class="sc-badge dn">-2%</span>
+            </div>
+            <div class="sc-num" style="color:var(--amber)" id="pend-orders">3</div>
+            <div class="sc-lbl">Pending Confirmations</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-top">
+              <div class="sc-ico" style="background:#d4f3f7">💰</div>
+              <span class="sc-badge up">+18%</span>
+            </div>
+            <div class="sc-num">₹<span id="revenue">14,200</span></div>
+            <div class="sc-lbl">Revenue This Month</div>
+          </div>
+        </div>
+
+        <!-- Recent orders -->
+        <div class="sec-head">
+          <div><h2>Recent Bookings</h2><p>Latest 5 booking requests</p></div>
+          <button class="add-btn" onclick="nav('orders',document.querySelector('[onclick=\"nav(\'orders\',this)\"]'))">View All →</button>
+        </div>
+        <div class="table-wrap">
+          <table id="dash-table"><thead><tr><th>Customer</th><th>Tank Type</th><th>Date</th><th>Slot</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="dash-tbody"></tbody></table>
+        </div>
+
+        <!-- Quick stats -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.2rem;margin-top:1.5rem">
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.3rem">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--ocean);font-weight:700;margin-bottom:.8rem">Today's Slots</h3>
+            <div id="today-slots-dash" style="display:flex;flex-direction:column;gap:.5rem"></div>
+          </div>
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.3rem">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--ocean);font-weight:700;margin-bottom:.8rem">Service Breakdown</h3>
+            <div id="svc-breakdown" style="display:flex;flex-direction:column;gap:.5rem"></div>
+          </div>
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.3rem">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--ocean);font-weight:700;margin-bottom:.8rem">Quick Actions</h3>
+            <div style="display:flex;flex-direction:column;gap:.5rem">
+              <button onclick="nav('orders',null)" style="padding:.55rem .9rem;background:var(--aqua-pale);color:var(--teal);border:1.5px solid var(--aqua-lt);border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;text-align:left">📋 View Pending Orders</button>
+              <button onclick="nav('prices',null)" style="padding:.55rem .9rem;background:var(--gold-pale);color:var(--gold);border:1.5px solid #fde68a;border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;text-align:left">💰 Update Prices</button>
+              <button onclick="nav('slots',null)" style="padding:.55rem .9rem;background:var(--green-lt);color:var(--green);border:1.5px solid #86efac;border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;text-align:left">🕐 Manage Time Slots</button>
+              <button onclick="nav('whatsapp',null)" style="padding:.55rem .9rem;background:#dcfce7;color:#16a34a;border:1.5px solid #86efac;border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;text-align:left">💬 Send WhatsApp Blast</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ORDERS ── -->
+      <div class="page" id="p-orders">
+        <div class="sec-head">
+          <div><h2>All Bookings</h2><p>Manage and respond to customer booking requests</p></div>
+          <button class="add-btn" onclick="openAddOrder()">+ Add Manual Booking</button>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <div class="search-box">🔍<input type="text" id="order-search" placeholder="Search by name or phone…" oninput="filterOrders()"/></div>
+            <button class="filter-btn active" onclick="filterByStatus('all',this)">All</button>
+            <button class="filter-btn" onclick="filterByStatus('pending',this)">⏳ Pending</button>
+            <button class="filter-btn" onclick="filterByStatus('confirmed',this)">✅ Confirmed</button>
+            <button class="filter-btn" onclick="filterByStatus('completed',this)">🏁 Completed</button>
+            <button class="filter-btn" onclick="filterByStatus('cancelled',this)">❌ Cancelled</button>
+          </div>
+          <table><thead><tr><th>#</th><th>Customer</th><th>Tank Type</th><th>Area</th><th>Date</th><th>Slot</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="orders-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ── TIME SLOTS ── -->
+      <div class="page" id="p-slots">
+        <div class="sec-head">
+          <div><h2>Time Slot Management</h2><p>Control availability for each day and time slot</p></div>
+        </div>
+        <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.5rem">
+          <div class="slot-calendar">
+            <div>
+              <p style="font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem">Select Date</p>
+              <div class="slot-dates" id="slot-dates"></div>
+            </div>
+            <div>
+              <p style="font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem">Slot Availability — <span id="sel-date-lbl">Today</span></p>
+              <div class="slot-grid" id="slot-grid"></div>
+              <div style="display:flex;gap:1rem;margin-top:1.2rem;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--mid)"><span style="width:12px;height:12px;border-radius:3px;background:var(--green-lt);border:1.5px solid var(--green);display:inline-block"></span>Available</div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--mid)"><span style="width:12px;height:12px;border-radius:3px;background:var(--red-lt);border:1.5px solid var(--red);display:inline-block"></span>Full / Blocked</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PRICES ── -->
+      <div class="page" id="p-prices">
+        <div class="sec-head">
+          <div><h2>Price Management</h2><p>Update service prices — changes reflect on website immediately</p></div>
+        </div>
+        <div class="price-grid" id="price-grid"></div>
+      </div>
+
+      <!-- ── WHATSAPP ── -->
+      <div class="page" id="p-whatsapp">
+        <div class="sec-head">
+          <div><h2>WhatsApp Messages</h2><p>Send booking confirmations, reminders and bulk messages</p></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:1.5rem;align-items:start">
+          <div class="wa-composer">
+            <h3>Compose Message</h3>
+            <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">Choose a template or write a custom message</p>
+            <div class="wa-templates">
+              <span class="wa-tmpl sel" onclick="setTmpl(this,'booking')">Booking Confirm</span>
+              <span class="wa-tmpl" onclick="setTmpl(this,'reminder')">Reminder</span>
+              <span class="wa-tmpl" onclick="setTmpl(this,'complete')">Completed</span>
+              <span class="wa-tmpl" onclick="setTmpl(this,'promo')">Promotion</span>
+              <span class="wa-tmpl" onclick="setTmpl(this,'custom')">Custom</span>
+            </div>
+            <div class="fg" style="margin-bottom:.8rem">
+              <label style="font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ocean)">Customer Phone</label>
+              <input type="tel" id="wa-phone" placeholder="+91 98765 43210" style="padding:.68rem .95rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.88rem;color:var(--ink);background:var(--cream);outline:none;transition:all .2s;width:100%"/>
+            </div>
+            <textarea class="wa-textarea" id="wa-msg">Hi! 🙏 Your water tank cleaning has been *confirmed*.\n\n📅 Date: [DATE]\n⏰ Time: [SLOT]\n👷 Team will arrive at your location.\n\nThank you for choosing Sri Sabari! 💧\n\nFor any queries: +91 99439 28555</textarea>
+            <div class="wa-actions">
+              <button class="wa-send" onclick="sendWA()">💬 Send WhatsApp</button>
+              <button class="wa-bulk" onclick="sendBulk()">📢 Bulk Reminder</button>
+            </div>
+          </div>
+          <div>
+            <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.3rem;margin-bottom:1rem">
+              <h3 style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:var(--ocean);margin-bottom:.9rem">Recent Messages Sent</h3>
+              <div id="wa-log" style="display:flex;flex-direction:column;gap:.7rem"></div>
+            </div>
+            <div style="background:var(--aqua-pale);border:1.5px solid var(--aqua-lt);border-radius:16px;padding:1.2rem">
+              <p style="font-size:.8rem;font-weight:700;color:var(--teal);margin-bottom:.5rem">💡 Admin WhatsApp Number</p>
+              <p style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--ocean)">+91 99439 28555</p>
+              <p style="font-size:.72rem;color:var(--muted);margin-top:4px">All bookings are routed to this number</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ANALYTICS ── -->
+      <div class="page" id="p-analytics">
+        <div class="sec-head"><div><h2>Analytics</h2><p>Performance overview for Sri Sabari services</p></div></div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <h3>Monthly Bookings (2025)</h3>
+            <div class="bar-chart" id="monthly-chart"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Service Type Distribution</h3>
+            <div class="donut-wrap">
+              <svg class="mini-donut" viewBox="0 0 110 110" id="donut-svg"></svg>
+              <div class="donut-legend" id="donut-legend"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem">
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.3rem">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:var(--ocean);margin-bottom:.8rem">Top Service Zones</h3>
+            <div id="top-zones" style="display:flex;flex-direction:column;gap:.5rem"></div>
+          </div>
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.3rem">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:var(--ocean);margin-bottom:.8rem">Popular Time Slots</h3>
+            <div id="popular-slots" style="display:flex;flex-direction:column;gap:.5rem"></div>
+          </div>
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.3rem">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:var(--ocean);margin-bottom:.8rem">Revenue Summary</h3>
+            <div id="revenue-summary" style="display:flex;flex-direction:column;gap:.6rem"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ZONES ── -->
+      <div class="page" id="p-zones">
+        <div class="sec-head">
+          <div><h2>Service Zones</h2><p>Manage delivery areas — toggle availability</p></div>
+          <button class="add-btn" onclick="addZone()">+ Add Zone</button>
+        </div>
+        <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.5rem">
+          <div id="zones-list" style="display:flex;flex-wrap:wrap;gap:.7rem"></div>
+        </div>
+      </div>
+
+      <!-- ── SETTINGS ── -->
+      <div class="page" id="p-settings">
+        <div class="sec-head"><div><h2>Settings</h2><p>Business details and system configuration</p></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.5rem">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:var(--ocean);margin-bottom:1.2rem">Business Information</h3>
+            <div class="fg"><label>Business Name</label><input type="text" value="Sri Sabari Water Tank Cleaning Services"/></div>
+            <div class="fg"><label>Admin Phone (WhatsApp)</label><input type="tel" value="+91 99439 28555"/></div>
+            <div class="fg"><label>Address</label><input type="text" value="No 11, Near Ayyalumeenachi Nagar, Selvapuram, Udumalpet – 642126"/></div>
+            <div class="fg"><label>Working Hours</label><input type="text" value="Monday – Saturday · 7:00 AM to 7:00 PM"/></div>
+            <button class="save-btn" onclick="toast('✅ Business info saved successfully!')">Save Changes</button>
+          </div>
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.5rem">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:var(--ocean);margin-bottom:1.2rem">Admin Password</h3>
+            <div class="fg"><label>Current Password</label><input type="password" placeholder="••••••••"/></div>
+            <div class="fg"><label>New Password</label><input type="password" placeholder="••••••••"/></div>
+            <div class="fg"><label>Confirm New Password</label><input type="password" placeholder="••••••••"/></div>
+            <button class="save-btn" onclick="toast('✅ Password updated!')">Update Password</button>
+          </div>
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:1.5rem">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:var(--ocean);margin-bottom:1.2rem">Notification Settings</h3>
+            <div style="display:flex;flex-direction:column;gap:.9rem">
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;color:var(--mid)"><input type="checkbox" checked style="width:16px;height:16px;accent-color:var(--teal)"/>Send WhatsApp on new booking</label>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;color:var(--mid)"><input type="checkbox" checked style="width:16px;height:16px;accent-color:var(--teal)"/>Send reminder 1 day before appointment</label>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;color:var(--mid)"><input type="checkbox" style="width:16px;height:16px;accent-color:var(--teal)"/>Email summary at end of day</label>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;color:var(--mid)"><input type="checkbox" checked style="width:16px;height:16px;accent-color:var(--teal)"/>Alert when slot gets full</label>
+            </div>
+            <button class="save-btn" style="margin-top:1rem" onclick="toast('✅ Notification settings saved!')">Save Settings</button>
+          </div>
+          <div style="background:linear-gradient(135deg,var(--ocean),var(--teal));border-radius:16px;padding:1.5rem;color:#fff">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;margin-bottom:.5rem">🌐 Website Links</h3>
+            <p style="font-size:.8rem;opacity:.75;margin-bottom:1.2rem">Quick access to live website pages</p>
+            <div style="display:flex;flex-direction:column;gap:.6rem">
+              <a href="index.html" target="_blank" style="padding:.6rem 1rem;background:rgba(255,255,255,.15);color:#fff;border-radius:9px;font-size:.82rem;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:7px">🌐 View Customer Website</a>
+              <a href="index.html#book" target="_blank" style="padding:.6rem 1rem;background:rgba(255,255,255,.12);color:#fff;border-radius:9px;font-size:.82rem;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:7px">📅 Booking Section</a>
+              <a href="https://wa.me/919943928555" target="_blank" style="padding:.6rem 1rem;background:#22c55e;color:#fff;border-radius:9px;font-size:.82rem;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:7px">💬 Open WhatsApp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3 id="modal-title">Add Manual Booking</h3>
+    <p id="modal-sub">Fill in customer details to create a booking manually.</p>
+    <div class="fg"><label>Customer Name</label><input type="text" id="m-name" placeholder="Ravi Kumar"/></div>
+    <div class="fg"><label>Phone Number</label><input type="tel" id="m-phone" placeholder="+91 98765 43210"/></div>
+    <div class="fg"><label>Area</label><input type="text" id="m-area" placeholder="Selvapuram, Udumalpet"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+      <div class="fg"><label>Tank Type</label><select id="m-tank"><option>Overhead Tank</option><option>Underground Sump</option><option>Commercial Tank</option><option>Water Testing</option><option>Repair</option></select></div>
+      <div class="fg"><label>Date</label><input type="date" id="m-date"/></div>
+    </div>
+    <div class="fg"><label>Time Slot</label><select id="m-slot"><option>7:00–9:00 AM</option><option>9:00–11:00 AM</option><option>11:00 AM–1:00 PM</option><option>1:00–3:00 PM</option><option>3:00–5:00 PM</option><option>5:00–7:00 PM</option></select></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" onclick="saveOrder()">Save Booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="admin-toast" id="admin-toast"></div>
+
+<script>
+/* ════════ DATA ════════ */
+const PRICES={
+  oh:{icon:'🏗️',name:'Overhead Tank Cleaning',sub:'Per visit',val:599,id:'p-oh'},
+  su:{icon:'⛏️',name:'Underground Sump Cleaning',sub:'Per visit',val:799,id:'p-su'},
+  co:{icon:'🏢',name:'Commercial Tank Cleaning',sub:'Per visit',val:1499,id:'p-co'},
+  te:{icon:'🧪',name:'Water Quality Testing',sub:'Per test',val:299,id:'p-te'},
+  re:{icon:'🔧',name:'Tank Repair & Sealing',sub:'Per repair',val:499,id:'p-re'},
+  am:{icon:'📅',name:'Annual AMC Plan',sub:'Per year',val:1199,id:'p-am'},
+};
+
+let ORDERS=[
+  {id:1,name:'Muthu Kumar',phone:'9876543210',area:'Selvapuram',tank:'Overhead Tank',date:'2025-05-21',slot:'9:00–11:00 AM',status:'pending'},
+  {id:2,name:'Priya Selvaraj',phone:'9845678901',area:'Bazaar Street',tank:'Underground Sump',date:'2025-05-21',slot:'11:00 AM–1:00 PM',status:'confirmed'},
+  {id:3,name:'Subramanian R',phone:'9923456780',area:'Gandhipuram Colony',tank:'Commercial Tank',date:'2025-05-22',slot:'7:00–9:00 AM',status:'pending'},
+  {id:4,name:'Karthik V',phone:'9765432109',area:'Palani Road',tank:'Overhead Tank',date:'2025-05-20',slot:'3:00–5:00 PM',status:'completed'},
+  {id:5,name:'Sundari Devi',phone:'9654321098',area:'Velliangadu',tank:'Water Testing',date:'2025-05-20',slot:'1:00–3:00 PM',status:'completed'},
+  {id:6,name:'Rajan M',phone:'9543210987',area:'Aliyar',tank:'Underground Sump',date:'2025-05-19',slot:'9:00–11:00 AM',status:'cancelled'},
+  {id:7,name:'Anbu Selvan',phone:'9432109876',area:'New Bus Stand',tank:'Annual AMC Plan',date:'2025-05-23',slot:'11:00 AM–1:00 PM',status:'pending'},
+];
+
+const SLOTS_DEF=[
+  {time:'7:00–9:00 AM',sub:'Early Morning',avail:true,booked:0},
+  {time:'9:00–11:00 AM',sub:'Morning',avail:true,booked:2},
+  {time:'11:00 AM–1:00 PM',sub:'Late Morning',avail:false,booked:3},
+  {time:'1:00–3:00 PM',sub:'Afternoon',avail:true,booked:1},
+  {time:'3:00–5:00 PM',sub:'Evening',avail:true,booked:0},
+  {time:'5:00–7:00 PM',sub:'Late Evening',avail:true,booked:1},
+];
+let slotsData={};
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHLY=[4,7,9,11,8,15,12,18,14,22,19,27];
+const ZONES_LIST=['Udumalpet Town','Selvapuram','Bazaar Street','Ayyalumeenachi Nagar','Gandhipuram Colony','New Bus Stand Area','Velliangadu','Muthampalayam','Palani Road','Pollachi Road','Dharapuram Road','Madathukulam Road','Koduvai','Negamam','Aliyar','Anaimalai','Ettikulam','Sholayar Road','Coimbatore Border','Pollachi (Nearby)','Dharapuram (Nearby)'];
+const WA_TMPLS={
+  booking:`Hi! 🙏 Your water tank cleaning has been *confirmed*.\n\n📅 Date: [DATE]\n⏰ Time: [SLOT]\n👷 Our team will arrive at your location.\n\nThank you for choosing Sri Sabari! 💧\n\nFor queries: +91 99439 28555`,
+  reminder:`Hi! 🔔 Friendly reminder — your Sri Sabari tank cleaning is *tomorrow*.\n\n📅 Date: [DATE]\n⏰ Slot: [SLOT]\n\nPlease ensure access to the tank is ready.\n\nSri Sabari Water Tank Cleaning 💧`,
+  complete:`Hi! ✅ Your water tank cleaning is now *complete*.\n\nYour water is 100% pure and sanitised 💧\n\nPlease find your inspection report attached. Thank you for trusting Sri Sabari!\n\nRate us: justdial.com/sri-sabari`,
+  promo:`Hi! 🎉 Special offer from Sri Sabari!\n\n🧹 Overhead Tank Cleaning @ ₹499 (limited time)\n🧪 Free Water Test with every booking this month!\n\nBook now: +91 99439 28555\nSri Sabari, Udumalpet 💧`,
+  custom:``
+};
+let currentFilter='all';
+let currentSlotDate='';
+let orderIdCounter=8;
+const fg=(id)=>document.getElementById(id);
+
+/* ════════ LOGIN ════════ */
+function doLogin(){
+  const u=fg('l-user').value.trim();
+  const p=fg('l-pass').value.trim();
+  if(u==='admin'&&p==='sabari2008'){
+    fg('login-screen').style.display='none';
+    fg('app').classList.add('active');
+    initApp();
+  } else {
+    fg('lerr').classList.add('show');
+    setTimeout(()=>fg('lerr').classList.remove('show'),3000);
+  }
+}
+function doLogout(){
+  fg('app').classList.remove('active');
+  fg('login-screen').style.display='flex';
+  fg('l-user').value='';fg('l-pass').value='';
+}
+
+/* ════════ NAVIGATION ════════ */
+const PAGE_META={
+  dashboard:{title:'Dashboard',sub:"Welcome back! Here's what's happening today."},
+  orders:{title:'All Bookings',sub:'Manage and respond to customer booking requests'},
+  slots:{title:'Time Slots',sub:'Control slot availability by date'},
+  prices:{title:'Price Management',sub:'Update service prices — reflects on website immediately'},
+  whatsapp:{title:'WhatsApp Messages',sub:'Send confirmations, reminders and bulk messages'},
+  analytics:{title:'Analytics',sub:'Performance overview for Sri Sabari services'},
+  zones:{title:'Service Zones',sub:'Manage delivery areas and toggle availability'},
+  settings:{title:'Settings',sub:'Business details and system configuration'},
+};
+function nav(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-nav a,.sb-nav button').forEach(a=>a.classList.remove('active'));
+  fg('p-'+page).classList.add('active');
+  if(el)el.classList.add('active');
+  const m=PAGE_META[page];
+  if(m){fg('page-title').textContent=m.title;fg('page-sub').textContent=m.sub}
+}
+
+/* ════════ INIT ════════ */
+function initApp(){
+  renderDash();renderOrders();renderPrices();initSlots();renderAnalytics();renderZones();renderWALog();
+}
+
+/* ════════ DASHBOARD ════════ */
+function renderDash(){
+  const pending=ORDERS.filter(o=>o.status==='pending');
+  const completed=ORDERS.filter(o=>o.status==='completed');
+  fg('total-orders').textContent=ORDERS.length;
+  fg('comp-orders').textContent=completed.length;
+  fg('pend-orders').textContent=pending.length;
+  fg('pending-count').textContent=pending.length;
+  const rev=ORDERS.filter(o=>o.status==='completed').reduce((a,o)=>{
+    const map={'Overhead Tank':599,'Underground Sump':799,'Commercial Tank':1499,'Water Testing':299,'Repair':499,'Annual AMC Plan':1199};
+    return a+(map[o.tank]||599);
+  },0);
+  fg('revenue').textContent=rev.toLocaleString('en-IN');
+  // recent 5
+  const tb=fg('dash-tbody');tb.innerHTML='';
+  ORDERS.slice(-5).reverse().forEach(o=>{
+    tb.innerHTML+=`<tr><td><div class="td-name">${o.name}</div><div class="td-phone">${o.phone}</div></td><td><span class="badge teal">${o.tank}</span></td><td>${o.date}</td><td>${o.slot}</td><td><span class="status ${o.status}">${o.status}</span></td><td><div class="act-btns">${o.status==='pending'?`<button class="act-btn accept" onclick="updateStatus(${o.id},'confirmed')">Accept</button><button class="act-btn cancel" onclick="updateStatus(${o.id},'cancelled')">Cancel</button>`:'<span style="font-size:.78rem;color:var(--muted)">—</span>'}</div></td></tr>`;
+  });
+  // today slots
+  const ts=fg('today-slots-dash');ts.innerHTML='';
+  SLOTS_DEF.forEach(s=>{
+    ts.innerHTML+=`<div style="display:flex;justify-content:space-between;align-items:center;font-size:.78rem;padding:.3rem 0;border-bottom:1px solid var(--border)"><span style="color:var(--mid)">${s.time}</span><span style="font-weight:600;color:${s.avail?'var(--green)':'var(--red)'}">${s.avail?'✓ Open':'✗ Full'}</span></div>`;
+  });
+  // svc breakdown
+  const sb=fg('svc-breakdown');sb.innerHTML='';
+  const svcMap={};ORDERS.forEach(o=>svcMap[o.tank]=(svcMap[o.tank]||0)+1);
+  Object.entries(svcMap).sort((a,b)=>b[1]-a[1]).slice(0,4).forEach(([k,v])=>{
+    sb.innerHTML+=`<div style="display:flex;justify-content:space-between;align-items:center;font-size:.78rem;padding:.3rem 0;border-bottom:1px solid var(--border)"><span style="color:var(--mid)">${k}</span><span style="font-weight:700;color:var(--teal)">${v} bookings</span></div>`;
+  });
+}
+
+/* ════════ ORDERS ════════ */
+function renderOrders(){
+  const q=fg('order-search')?.value.toLowerCase()||'';
+  const tb=fg('orders-tbody');tb.innerHTML='';
+  const filtered=ORDERS.filter(o=>{
+    const matchStatus=currentFilter==='all'||o.status===currentFilter;
+    const matchQ=!q||(o.name.toLowerCase().includes(q)||o.phone.includes(q));
+    return matchStatus&&matchQ;
+  });
+  if(!filtered.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div>📭</div>No bookings found.</div></td></tr>`;return}
+  filtered.forEach(o=>{
+    tb.innerHTML+=`<tr>
+      <td style="font-weight:600;color:var(--muted)">#${o.id}</td>
+      <td><div class="td-name">${o.name}</div><div class="td-phone">${o.phone}</div></td>
+      <td><span class="badge teal">${o.tank}</span></td>
+      <td style="font-size:.8rem">${o.area}</td>
+      <td style="font-size:.8rem">${o.date}</td>
+      <td style="font-size:.8rem">${o.slot}</td>
+      <td><span class="status ${o.status}">${o.status}</span></td>
+      <td><div class="act-btns">
+        ${o.status==='pending'?`<button class="act-btn accept" onclick="updateStatus(${o.id},'confirmed')">✓ Accept</button><button class="act-btn cancel" onclick="updateStatus(${o.id},'cancelled')">✗ Cancel</button>`:''}
+        ${o.status==='confirmed'?`<button class="act-btn complete" onclick="updateStatus(${o.id},'completed')">🏁 Done</button>`:''}
+        <button class="act-btn wa" onclick="waCustomer('${o.phone}','${o.name}','${o.date}','${o.slot}')">💬</button>
+      </div></td>
+    </tr>`;
+  });
+}
+function filterByStatus(status,el){
+  currentFilter=status;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderOrders();
+}
+function filterOrders(){renderOrders()}
+function updateStatus(id,status){
+  const o=ORDERS.find(x=>x.id===id);
+  if(o){
+    o.status=status;
+    renderOrders();renderDash();
+    toast(`✅ Order #${id} marked as ${status}`);
+    if(status==='confirmed')waCustomer(o.phone,o.name,o.date,o.slot);
+  }
+}
+function waCustomer(phone,name,date,slot){
+  const msg=WA_TMPLS.booking.replace('[DATE]',date).replace('[SLOT]',slot);
+  window.open(`https://wa.me/91${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+function openAddOrder(){
+  fg('modal').classList.add('open');
+  fg('m-date').min=new Date().toISOString().split('T')[0];
+  fg('m-date').value=fg('m-date').min;
+}
+function closeModal(){fg('modal').classList.remove('open')}
+function saveOrder(){
+  const n=fg('m-name').value.trim();const p=fg('m-phone').value.trim();
+  if(!n||!p){alert('Name and phone are required.');return}
+  ORDERS.push({id:orderIdCounter++,name:n,phone:p,area:fg('m-area').value||'Udumalpet',tank:fg('m-tank').value,date:fg('m-date').value,slot:fg('m-slot').value,status:'confirmed'});
+  closeModal();renderOrders();renderDash();toast('✅ Booking added successfully!');
+}
+
+/* ════════ PRICES ════════ */
+function renderPrices(){
+  const pg=fg('price-grid');pg.innerHTML='';
+  Object.entries(PRICES).forEach(([key,p])=>{
+    pg.innerHTML+=`<div class="price-card">
+      <div class="price-card-top">
+        <div class="price-ico">${p.icon}</div>
+        <div><h3>${p.name}</h3><small>${p.sub}</small></div>
+      </div>
+      <div class="price-fg"><label>Starting Price (₹)</label>
+        <div class="price-input-wrap"><span class="price-sym">₹</span><input type="number" id="price-${key}" value="${p.val}" min="0" step="50"/></div>
+      </div>
+      <button class="save-btn" onclick="savePrice('${key}')">Update Price</button>
+    </div>`;
+  });
+}
+function savePrice(key){
+  const val=parseInt(fg('price-'+key).value)||0;
+  PRICES[key].val=val;
+  toast(`✅ ${PRICES[key].name} price updated to ₹${val.toLocaleString('en-IN')}`);
+  // update main site price elements if open
+  const el=window.opener?.document?.getElementById(PRICES[key].id);
+  if(el)el.innerHTML=`<sup>₹</sup>${val.toLocaleString('en-IN')}<small> / ${PRICES[key].sub.toLowerCase()}</small>`;
+}
+
+/* ════════ SLOTS ════════ */
+function initSlots(){
+  const dates=[];
+  const today=new Date();
+  for(let i=0;i<7;i++){
+    const d=new Date(today);d.setDate(today.getDate()+i);
+    const key=d.toISOString().split('T')[0];
+    dates.push({key,label:(i===0?'Today — ':i===1?'Tomorrow — ':'')+d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})});
+    slotsData[key]=JSON.parse(JSON.stringify(SLOTS_DEF));
+  }
+  const dc=fg('slot-dates');dc.innerHTML='';
+  dates.forEach((d,i)=>{
+    dc.innerHTML+=`<button class="date-btn${i===0?' sel':''}" onclick="selectDate('${d.key}',this)">${d.label}</button>`;
+  });
+  currentSlotDate=dates[0].key;
+  fg('sel-date-lbl').textContent=dates[0].label;
+  renderSlots(dates[0].key);
+}
+function selectDate(key,el){
+  currentSlotDate=key;
+  document.querySelectorAll('.date-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  fg('sel-date-lbl').textContent=el.textContent;
+  renderSlots(key);
+}
+function renderSlots(key){
+  const sg=fg('slot-grid');sg.innerHTML='';
+  const slots=slotsData[key]||SLOTS_DEF;
+  slots.forEach((s,i)=>{
+    const cls=s.avail?'avail':'full';
+    sg.innerHTML+=`<div class="slot-tog ${cls}" onclick="toggleSlot('${key}',${i})">
+      <div class="slot-time">${s.time}</div>
+      <div class="slot-sub">${s.sub}</div>
+      <div class="slot-count">${s.booked} booked · Click to ${s.avail?'block':'unblock'}</div>
+    </div>`;
+  });
+}
+function toggleSlot(key,i){
+  slotsData[key][i].avail=!slotsData[key][i].avail;
+  renderSlots(key);
+  toast(`${slotsData[key][i].avail?'✅ Slot opened':'🚫 Slot blocked'}: ${slotsData[key][i].time}`);
+}
+
+/* ════════ WHATSAPP ════════ */
+function setTmpl(el,key){
+  document.querySelectorAll('.wa-tmpl').forEach(t=>t.classList.remove('sel'));
+  el.classList.add('sel');
+  fg('wa-msg').value=WA_TMPLS[key];
+}
+function sendWA(){
+  const phone=fg('wa-phone').value.trim().replace(/\D/g,'');
+  const msg=fg('wa-msg').value.trim();
+  if(!phone){alert('Please enter a phone number.');return}
+  window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+  toast('💬 WhatsApp opened — send the message!');
+  renderWALog();
+}
+function sendBulk(){
+  const count=ORDERS.filter(o=>o.status==='confirmed').length;
+  toast(`📢 Reminder sent to ${count} confirmed customers!`);
+  renderWALog();
+}
+function renderWALog(){
+  const log=fg('wa-log');if(!log)return;
+  const items=[
+    {time:'10:32 AM',name:'Muthu Kumar',type:'Confirmed'},
+    {time:'Yesterday',name:'Karthik V',type:'Reminder'},
+    {time:'2 days ago',name:'Sundari Devi',type:'Completed'},
+  ];
+  log.innerHTML=items.map(i=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.78rem"><div><span style="font-weight:600;color:var(--ink)">${i.name}</span><span style="color:var(--muted);margin-left:6px">${i.type}</span></div><span style="color:var(--muted)">${i.time}</span></div>`).join('');
+}
+
+/* ════════ ANALYTICS ════════ */
+function renderAnalytics(){
+  // Monthly bar chart
+  const mc=fg('monthly-chart');mc.innerHTML='';
+  const maxV=Math.max(...MONTHLY);
+  MONTHS.forEach((m,i)=>{
+    const pct=Math.round(MONTHLY[i]/maxV*100);
+    mc.innerHTML+=`<div class="bar-row"><span class="bar-lbl">${m} 2025</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><span class="bar-val">${MONTHLY[i]}</span></div>`;
+  });
+  // Donut
+  const svcMap={'Overhead':10,'Sump':8,'Commercial':5,'Testing':4};
+  const total=Object.values(svcMap).reduce((a,b)=>a+b,0);
+  const colors=['#007a8c','#00b4cc','#c8860a','#7c3aed'];
+  let offset=0;const R=35,C=55;
+  const circ=2*Math.PI*R;
+  let svgStr='';const legStr=[];
+  Object.entries(svcMap).forEach(([k,v],i)=>{
+    const pct=v/total;const dash=pct*circ;
+    svgStr+=`<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${colors[i]}" stroke-width="14" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-offset*circ}" transform="rotate(-90 ${C} ${C})"/>`;
+    legStr.push(`<div class="dl-item"><span class="dl-dot" style="background:${colors[i]}"></span><span class="dl-lbl">${k}</span><span class="dl-pct">${Math.round(pct*100)}%</span></div>`);
+    offset+=pct;
+  });
+  const ds=fg('donut-svg');ds.innerHTML=svgStr;
+  fg('donut-legend').innerHTML=legStr.join('');
+  // Top zones
+  const tz=fg('top-zones');tz.innerHTML='';
+  const zoneMap={};ORDERS.forEach(o=>zoneMap[o.area]=(zoneMap[o.area]||0)+1);
+  Object.entries(zoneMap).sort((a,b)=>b[1]-a[1]).slice(0,5).forEach(([z,c])=>{
+    tz.innerHTML+=`<div style="display:flex;justify-content:space-between;font-size:.78rem;padding:.3rem 0;border-bottom:1px solid var(--border)"><span style="color:var(--mid)">${z}</span><span style="font-weight:700;color:var(--teal)">${c}</span></div>`;
+  });
+  // Popular slots
+  const ps=fg('popular-slots');ps.innerHTML='';
+  const slotMap={};ORDERS.forEach(o=>slotMap[o.slot]=(slotMap[o.slot]||0)+1);
+  Object.entries(slotMap).sort((a,b)=>b[1]-a[1]).slice(0,5).forEach(([s,c])=>{
+    ps.innerHTML+=`<div style="display:flex;justify-content:space-between;font-size:.78rem;padding:.3rem 0;border-bottom:1px solid var(--border)"><span style="color:var(--mid)">${s}</span><span style="font-weight:700;color:var(--teal)">${c}</span></div>`;
+  });
+  // Revenue summary
+  const rs=fg('revenue-summary');rs.innerHTML='';
+  const revItems=[['This Month','₹14,200','↑ 18%','var(--green)'],['Last Month','₹12,050','↑ 8%','var(--green)'],['Total 2025','₹98,400','','var(--teal)'],['Avg / Booking','₹724','','var(--mid)']];
+  revItems.forEach(([l,v,ch,c])=>{
+    rs.innerHTML+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--border)"><span style="font-size:.78rem;color:var(--mid)">${l}</span><div style="text-align:right"><span style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:${c}">${v}</span>${ch?`<span style="font-size:.68rem;color:var(--green);margin-left:5px">${ch}</span>`:''}</div></div>`;
+  });
+}
+
+/* ════════ ZONES ════════ */
+function renderZones(){
+  const zl=fg('zones-list');zl.innerHTML='';
+  ZONES_LIST.forEach((z,i)=>{
+    const active=i<15;
+    zl.innerHTML+=`<span onclick="toggleZone(this)" style="padding:.45rem 1.05rem;border-radius:50px;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid;${active?'background:var(--teal);color:#fff;border-color:var(--teal)':'background:var(--cream);color:var(--muted);border-color:var(--border)'}">${z}</span>`;
+  });
+}
+function toggleZone(el){
+  const active=el.style.background.includes('var(--teal)')||el.style.color==='rgb(255, 255, 255)';
+  if(active){el.style.cssText='padding:.45rem 1.05rem;border-radius:50px;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid;background:var(--cream);color:var(--muted);border-color:var(--border)'}
+  else{el.style.cssText='padding:.45rem 1.05rem;border-radius:50px;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid;background:var(--teal);color:#fff;border-color:var(--teal)'}
+  toast(`${active?'🚫 Disabled':'✅ Enabled'}: ${el.textContent}`);
+}
+function addZone(){
+  const z=prompt('Enter new zone / area name:');
+  if(z&&z.trim()){ZONES_LIST.push(z.trim());renderZones();toast(`✅ Zone "${z.trim()}" added!`)}
+}
+
+/* ════════ TOAST ════════ */
+function toast(msg){
+  const t=fg('admin-toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+/* ════════ MODAL CLOSE ON BG ════════ */
+fg('modal').addEventListener('click',e=>{if(e.target===fg('modal'))closeModal()});
+
+/* ════════ HINT ════════ */
+setTimeout(()=>{
+  const h=fg('lerr');
+  if(fg('login-screen').style.display!=='none'){
+    h.textContent='💡 Demo credentials: admin / sabari2008';h.classList.add('show');
+  }
+},1800);
+</script>
+</body>
+</html>
